@@ -14,7 +14,6 @@ import {
 } from "@/lib/data/sitemap";
 import { getDefaultCountry, getDefaultLocale, getStoreUrl } from "@/lib/store";
 
-export const dynamic = "force-dynamic";
 
 type CountryLocale = MarketLocaleTarget;
 

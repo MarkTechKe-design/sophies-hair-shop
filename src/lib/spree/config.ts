@@ -121,3 +121,30 @@ export function resetClient(): void {
   _config = null;
   _wholesaleClient = null;
 }
+
+// GLOBAL_404_SHIELD: Intercepts unhandled Spree 404s from crashing RSC Streaming
+function createSafeSpreeProxy(target: any): any {
+  if (typeof target !== "object" || target === null) return target;
+  return new Proxy(target, {
+    get(obj, prop) {
+      const orig = obj[prop];
+      if (typeof orig === "function") {
+        return async (...args: any[]) => {
+          try {
+            return await orig.apply(obj, args);
+          } catch (err: any) {
+            // Intercept Spree 404s and return empty payload structures
+            if (err?.status === 404 || err?.message?.includes("404") || err?.name === "SpreeError") {
+              return { data: [], meta: { total_count: 0, total_pages: 1 } };
+            }
+            throw err;
+          }
+        };
+      }
+      if (typeof orig === "object" && orig !== null) {
+        return createSafeSpreeProxy(orig);
+      }
+      return orig;
+    }
+  });
+}
